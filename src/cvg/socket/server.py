@@ -33,7 +33,7 @@ class ServerSocket:
             
         return wrapper
     
-    def __connection(self, connection, address):
+    def __connection(self, connection: socket, address: Address):
         print("listening", connection, address)
     
     def __loop(self):

@@ -20,15 +20,15 @@ class PacketType(Enum):
 
 @dataclass
 class Address:
-    _raw: tuple[str, int] = field(default=("", -1))
-    
     host: str = field(default="")
     port: int = field(default=-1)
     
-    def __post_init__(self):
-        if self._raw != ("", -1):
-            self.host = self._raw[0]
-            self.port = self._raw[1]
+    def __init__(self, address: tuple[str, int]):
+        self.host = address[0]
+        self.port = address[1]
+        
+    def __str__(self) -> str:
+        return self.host + ":" + str(self.port)
     
     
 @dataclass
