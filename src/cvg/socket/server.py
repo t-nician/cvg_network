@@ -24,14 +24,8 @@ class ServerSocket:
         self.__socket.bind((self.host, self.port))
         self.__socket.listen(self.max_connections)
     
-    def start(self):
-        def wrapper(func: ( PacketData ) = None):
-            if func is not None:
-                self.__on_packet = func
-                
-            self.__loop()
-            
-        return wrapper
+    def __entrance(self, connection: socket, address: Address):
+        pass
     
     def __connection(self, connection: socket, address: Address):
         while True:
@@ -56,6 +50,15 @@ class ServerSocket:
                 target=self.__connection,
                 args=(connection, Address(address),)
             ).start()
+
+    def start(self):
+        def wrapper(func: ( PacketData ) = None):
+            if func is not None:
+                self.__on_packet = func
+                
+            self.__loop()
+            
+        return wrapper
             
             
             
