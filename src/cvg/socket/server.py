@@ -54,7 +54,7 @@ class ServerSocket:
             print("client accepted establishing connection.")
             threading.Thread(
                 target=self.__connection,
-                args=(self, connection, Address(address),)
+                args=(connection, Address(address),)
             ).start()
             
             

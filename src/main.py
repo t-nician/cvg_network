@@ -1,6 +1,8 @@
+import time
 import threading
 
 from cvg.socket.server import ServerSocket
+from cvg.socket.client import ClientSocket
 
 from cvg.socket.packet import Address, PacketType, PacketData
 
@@ -15,4 +17,8 @@ def server_thread():
 
 threading.Thread(target=server_thread).start()
 
+time.sleep(2)
 
+client = ClientSocket()
+
+client.login()
