@@ -1,0 +1,56 @@
+from enum import Enum
+from dataclasses import dataclass, field
+
+
+P_INIT_PAYLOAD_LEN = "payload detected but is too short for a ID & PacketType!"
+
+
+class PacketType(Enum):
+    ERROR = b"\xff"
+    
+    ENTRANCE = b"\xf0"
+    LOGIN = b"\xf1"
+    
+    ACCEPTED = b"\xf2"
+    DENIED = b"\xf3"
+    
+    COMMAND  = b"\x01"
+    STREAM = b"\x02"
+
+
+@dataclass
+class Address:
+    _raw: tuple[str, int] = field(default=("", -1))
+    
+    host: str = field(default="")
+    port: int = field(default=-1)
+    
+    def __post_init__(self):
+        if self._raw != ("", -1):
+            self.host = self._raw[0]
+            self.port = self._raw[1]
+    
+    
+@dataclass
+class PacketData:
+    payload: bytes = field(default=b"")
+    
+    id: bytes = field(default=b"\x00")
+    type: PacketType = field(default=PacketType.ERROR)
+    
+    def __post_init__(self):
+        raw_len = len(self.payload)
+        
+        assert raw_len == 0 or raw_len >= 2, P_INIT_PAYLOAD_LEN
+        
+        if self.type is PacketType.ERROR and raw_len > 0:
+            self.id = self.payload[0:1]
+            
+            try:
+                self.type = PacketType(self.payload[1:2])
+                self.payload = self.payload[2::]
+            except:
+                self.payload = b"invalid packet type!"
+    
+    def encode(self) -> bytes:
+        return self.id + self.type.value + self.payload
