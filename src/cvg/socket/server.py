@@ -34,24 +34,28 @@ class ServerSocket:
         return wrapper
     
     def __connection(self, connection: socket, address: Address):
-        print("listening", connection, address)
+        while True:
+            print("waiting on packet.")
+            packet = PacketData(connection.recv(4096))
+            
+            if packet.type is PacketType.ERROR and len(packet.payload) == 0:
+                print("client dropped connection.")
+                break
+            
+            print("packet received.")
+            connection.send(self.__on_packet(packet, address).encode())
+            print("response sent to client.")
     
     def __loop(self):
         while True:
+            print("waiting for client.")
             connection, address = self.__socket.accept()
             
+            print("client accepted establishing connection.")
             threading.Thread(
                 target=self.__connection,
                 args=(self, connection, Address(address),)
             ).start()
-            
-            #self.__connection(connection, Address(address))
-            #packet = PacketData(connection.recv(4096))
-            
-            #if packet.type is PacketType.ERROR and len(packet.payload) == 0:
-                #pass
-            
-            #self.__on_packet(packet, Address(address))
             
             
             

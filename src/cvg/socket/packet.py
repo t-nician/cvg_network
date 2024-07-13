@@ -35,10 +35,13 @@ class Address:
 class PacketData:
     payload: bytes = field(default=b"")
     
-    id: bytes = field(default=b"\x00")
     type: PacketType = field(default=PacketType.ERROR)
+    id: bytes = field(default=b"\x00")
     
     def __post_init__(self):
+        if type(self.payload) is str:
+            self.payload = self.payload.encode()
+            
         raw_len = len(self.payload)
         
         assert raw_len == 0 or raw_len >= 2, P_INIT_PAYLOAD_LEN
@@ -50,7 +53,7 @@ class PacketData:
                 self.type = PacketType(self.payload[1:2])
                 self.payload = self.payload[2::]
             except:
-                self.payload = b"invalid packet type!"
+                pass
     
     def encode(self) -> bytes:
         return self.id + self.type.value + self.payload
