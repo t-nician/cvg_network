@@ -18,6 +18,7 @@ class ServerSocket:
     
     __socket: socket | None = field(default=None)
     __on_packet: ( PacketData ) = field(default=lambda _: ())
+    __packet_filter: list[PacketType] = field(default_factory=list)
     
     def __post_init__(self):
         self.__socket = socket(AF_INET, SOCK_STREAM)
@@ -67,9 +68,24 @@ class ServerSocket:
             if packet.type is PacketType.ENTRANCE:
                 self.__entrance(packet, connection, address)
             elif self.authorized_addresses.get(str(address)) is True:
-                connection.send(
-                    PacketData(self.__on_packet(packet, address)).encode()
-                )
+                if len(self.__packet_filter) > 0:
+                    if self.__packet_filter.count(packet.type) == 0:
+                        self.__deny(packet, connection, address)
+                        continue
+                
+                result = self.__on_packet(packet, address)
+                
+                if type(result) is PacketData:
+                    result.id = packet.id
+                    result = result.encode()
+                elif type(result) is bytes:
+                    result = PacketData(
+                        result, 
+                        packet.type, 
+                        packet.id
+                    ).encode()
+                    print("bytes return", result)
+                connection.send(result)
             else:
                 self.__deny(packet, connection, address)
     
@@ -82,10 +98,11 @@ class ServerSocket:
                 args=(connection, Address(address),)
             ).start()
 
-    def start(self):
+    def start(self, *filter_packet_types: PacketType):
         def wrapper(func: ( PacketData ) = None):
             if func is not None:
                 self.__on_packet = func
+                self.__packet_filter = list(filter_packet_types)
                 
             self.__loop()
             
