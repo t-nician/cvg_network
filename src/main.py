@@ -1,27 +1,18 @@
-import time
-import threading
+from cvg.socket import event
 
-from cvg.socket.server import ServerSocket
-from cvg.socket.client import ClientSocket
+TEST_CHANNEL = b"TEST"
 
-from cvg.socket.packet import Address, PacketType, PacketData
+pool = event.Pool()
 
-def server_thread():
-    server = ServerSocket(key=b"secretkey")
 
-    @server.start(PacketType.COMMAND)
-    def on_packet(packet: PacketData, address: Address):
-        if packet.payload.lower() == b"hello":
-            return PacketData(b"nope!", PacketType.DENIED)
-        return b"go away!"
+@pool.add_channel(event.Channel(TEST_CHANNEL))
+def channel_transformer(*args, **kwargs):
+    print("transform time!")
+    return args, kwargs
 
-threading.Thread(target=server_thread).start()
 
-time.sleep(2)
+@pool.add_event(event.Event(TEST_CHANNEL))
+def event_listener(*args, **kwargs):
+    print("event time!")
+    return args, kwargs
 
-client = ClientSocket(server_key=b"secretkey")
-
-client.login()
-
-print(client.command(b"hello", b"\x03"))
-print(client.command(b"true", b"\x33"))

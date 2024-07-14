@@ -19,25 +19,3 @@ class ClientSocket:
     def __get(self, packet: PacketData) -> PacketData:
         self.__socket.send(packet.encode())
         return PacketData(self.__socket.recv(4096))
-    
-    def login(self) -> bool:
-        entrance_response = self.__get(
-            PacketData(b"", PacketType.ENTRANCE)
-        )
-        
-        if entrance_response.type is PacketType.LOGIN:
-            login_response = self.__get(
-                PacketData(self.server_key, PacketType.LOGIN)
-            )
-            
-            if login_response.type is PacketType.ACCEPTED:
-                return True
-        elif entrance_response.type is PacketType.ACCEPTED:
-            return True
-        
-        return False
-    
-    def command(self, command: bytes, id: bytes = b"\x00") -> PacketData:
-        return self.__get(
-            PacketData(command, PacketType.COMMAND, id)
-        )

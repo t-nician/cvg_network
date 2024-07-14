@@ -1,3 +1,29 @@
 {
-    
+    "server": {
+        "login": {
+            "host": "127.0.0.1",
+            "port": 5000,
+            "key": "key"
+        },
+
+        "socket": {
+            "connections": 5,
+            "encryption": {
+                "exchange": "ecdh",
+                "stream": "aes"
+            }
+        }
+    },
+
+    "client": {
+        "login": {
+            "host": "127.0.0.1",
+            "port": 500,
+            "key": "key"
+        },
+
+        "socket": {
+            
+        }
+    }
 }

@@ -7,14 +7,12 @@ P_INIT_PAYLOAD_LEN = "payload detected but is too short for a ID & PacketType!"
 
 class PacketType(Enum):
     ERROR = b"\xff"
+    ACCESS = b"\x00"
     
-    ENTRANCE = b"\xf0"
-    LOGIN = b"\xf1"
-    
-    ACCEPTED = b"\xf2"
-    DENIED = b"\xf3"
-    
-    COMMAND  = b"\x01"
+    GRANTED = b"\xf0"
+    DENIED = b"\xf1"
+
+    COMMAND = b"\x01"
     STREAM = b"\x02"
 
 

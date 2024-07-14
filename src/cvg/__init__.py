@@ -1,1 +1,1 @@
-from cvg import config, socket
+from cvg import socket
