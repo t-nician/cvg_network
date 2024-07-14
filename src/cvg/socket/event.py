@@ -53,7 +53,10 @@ class Pool:
     
     def emit(self, channel_name: any, *args, **kwargs):
         channel = self.channels.get(channel_name)
-        args, kwargs = channel.transformer_func(*args, **kwargs)
+        args = channel.transformer_func(*args, **kwargs)
+        
+        if type(args) is not tuple:
+            args = (args,)
         
         assert channel, CHANNEL_DOESNT_EXIST.format(
             str(channel_name)
@@ -66,7 +69,7 @@ class Pool:
             result = listener.func(*args, **kwargs)
             
             if channel.compile_returns and result is not None:
-                compiled_return.extend(list(result))
+                compiled_return.append(result)
             elif singular_return is None and result is not None:
                 singular_return = result
         

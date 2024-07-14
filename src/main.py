@@ -4,20 +4,20 @@ TEST_CHANNEL = b"TEST"
 
 pool = event.Pool()
 
-@pool.add_channel(event.Channel(TEST_CHANNEL))
-def channel_transformer(*args, **kwargs):
-    print("transform time!")
-    return args, kwargs
+@pool.add_channel(event.Channel(TEST_CHANNEL, compile_returns=True))
+def channel_transformer(greeting):
+    print("transforming", greeting)
+    return greeting.removeprefix("typo")
 
 @pool.add_event(event.Event(TEST_CHANNEL))
-def event_listener(*args, **kwargs):
-    print("event time!")
+def first_event(greeting):
+    print("first_event", greeting)
     return "hello", "there"
 
 @pool.add_event(event.Event(TEST_CHANNEL))
-def other_listener(*args, **kwargs):
-    print("other time!")
+def second_event(greeting):
+    print("second_event", greeting)
     return "test", "this"
 
 
-print(pool.emit(TEST_CHANNEL))
+print(pool.emit(TEST_CHANNEL, "typoHello!"))
