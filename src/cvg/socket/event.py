@@ -33,6 +33,7 @@ class Channel:
 @dataclass
 class Pool:
     channels: dict[any, Channel] = field(default_factory=dict)
+    transformer_emit: ( any ) = field(default=DEFAULT_CHANNEL_TRANSFORMER)
     
     def add_channel(self, channel: Channel):
         assert self.channels.get(channel.name) is None, CHANNEL_ALREADY_EXISTS.format(
@@ -60,6 +61,13 @@ class Pool:
         
         return wrapper
     
+    def emit_transformer(self, func: ( any )):
+        self.transformer_emit = func or DEFAULT_CHANNEL_TRANSFORMER
+        
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+        return wrapper
+    
     def emit(self, channel_name: any, *args):
         channel = self.channels.get(channel_name)
         
@@ -67,6 +75,7 @@ class Pool:
             str(channel_name)
         )
         
+        args = self.transformer_emit(*args)
         args = channel.transformer_func(*args)
         
         if type(args) is not tuple:
