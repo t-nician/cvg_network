@@ -9,6 +9,7 @@ CHANNEL_DOESNT_EXIST = "Channel '{0}' doesn't exist!"
 DEFAULT_CHANNEL_TRANSFORMER = lambda *_: ( _ )
 DEFAULT_EVENT_FUNC = lambda *_: ( )
 
+
 @dataclass
 class Event:
     channel_name: any = field(default=None)
