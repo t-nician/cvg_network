@@ -20,7 +20,7 @@ class ClientSocket:
         self.__socket.send(packet.encode())
         return PacketData(self.__socket.recv(4096))
     
-    def login(self):
+    def login(self) -> bool:
         entrance_response = self.__get(
             PacketData(b"", PacketType.ENTRANCE)
         )
@@ -31,8 +31,13 @@ class ClientSocket:
             )
             
             if login_response.type is PacketType.ACCEPTED:
-                print("accepted with password!")
-            elif login_response.type is PacketType.DENIED:
-                print("failed with password!")
+                return True
         elif entrance_response.type is PacketType.ACCEPTED:
-            print("accepted without password!")
+            return True
+        
+        return False
+    
+    def command(self, command: bytes, id: bytes = b"\x00") -> PacketData:
+        return self.__get(
+            PacketData(command, PacketType.COMMAND, id)
+        )

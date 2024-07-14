@@ -13,6 +13,7 @@ class ServerSocket:
     
     key: bytes = field(default=b"d")
     
+    authorized_addresses: dict[str, bool] = field(default_factory=dict)
     max_connections: int = field(default=5)
     
     __socket: socket | None = field(default=None)
@@ -37,41 +38,44 @@ class ServerSocket:
                     connection.send(
                         PacketData(b"", PacketType.ACCEPTED, packet.id).encode()
                     )
+                    
+                    self.authorized_addresses[str(address)] = True
                 else:
                     connection.send(
                         PacketData(b"", PacketType.DENIED, packet.id).encode()
                     )
+                    
+                    self.authorized_addresses[str(address)] = False
+                    
                     return None
         else:
             connection.send(
                 PacketData(b"", PacketType.ACCEPTED, packet.id).encode()
             )
+            
+            self.authorized_addresses[str(address)] = True
         
     
     def __connection(self, connection: socket, address: Address):
         while True:
-            print("waiting on packet.")
             packet = PacketData(connection.recv(4096))
             
             if packet.type is PacketType.ERROR and len(packet.payload) == 0:
-                print("client dropped connection.")
                 break
             
-            print("packet received.")
             if packet.type is PacketType.ENTRANCE:
                 self.__entrance(packet, connection, address)
-            elif packet.type is PacketType.LOGIN:
-                self.__login(packet, connection, address)
-            else:
+            elif self.authorized_addresses.get(str(address)) is True:
                 connection.send(self.__on_packet(packet, address).encode())
-                print("response sent to client.")
+            else:
+                connection.send(
+                    PacketData(b"", PacketType.DENIED, packet.id).encode()
+                )
     
     def __loop(self):
         while True:
-            print("waiting for client.")
             connection, address = self.__socket.accept()
             
-            print("client accepted establishing connection.")
             threading.Thread(
                 target=self.__connection,
                 args=(connection, Address(address),)
