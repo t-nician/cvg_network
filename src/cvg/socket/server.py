@@ -25,6 +25,16 @@ class ServerSocket:
         self.__socket.bind((self.host, self.port))
         self.__socket.listen(self.max_connections)
     
+    def __accept(self, packet: PacketData, connection: socket, address: Address):
+        connection.send(
+            PacketData(b"", PacketType.ACCEPTED, packet.id).encode()
+        )
+    
+    def __deny(self, packet: PacketData, connection: socket, address: Address):
+        connection.send(
+            PacketData(b"", PacketType.DENIED, packet.id).encode()
+        )
+    
     def __entrance(self, packet: PacketData, connection: socket, address: Address):
         if self.key != b"":
             connection.send(
@@ -33,26 +43,17 @@ class ServerSocket:
             
             key_packet = PacketData(connection.recv(4096))
             
-            if key_packet.type is PacketType.LOGIN:
-                if key_packet.payload == self.key:
-                    connection.send(
-                        PacketData(b"", PacketType.ACCEPTED, packet.id).encode()
-                    )
-                    
-                    self.authorized_addresses[str(address)] = True
-                else:
-                    connection.send(
-                        PacketData(b"", PacketType.DENIED, packet.id).encode()
-                    )
-                    
-                    self.authorized_addresses[str(address)] = False
-                    
-                    return None
+            if (
+                key_packet.type is PacketType.LOGIN 
+                and key_packet.payload == self.key
+            ):
+                self.__accept(key_packet, connection, address)
+                self.authorized_addresses[str(address)] = True
+            else:
+                self.__deny(key_packet, connection, address)    
+                self.authorized_addresses[str(address)] = False
         else:
-            connection.send(
-                PacketData(b"", PacketType.ACCEPTED, packet.id).encode()
-            )
-            
+            self.__accept(packet, connection, address)
             self.authorized_addresses[str(address)] = True
         
     
@@ -66,11 +67,11 @@ class ServerSocket:
             if packet.type is PacketType.ENTRANCE:
                 self.__entrance(packet, connection, address)
             elif self.authorized_addresses.get(str(address)) is True:
-                connection.send(self.__on_packet(packet, address).encode())
-            else:
                 connection.send(
-                    PacketData(b"", PacketType.DENIED, packet.id).encode()
+                    PacketData(self.__on_packet(packet, address)).encode()
                 )
+            else:
+                self.__deny(packet, connection, address)
     
     def __loop(self):
         while True:

@@ -13,8 +13,8 @@ def server_thread():
     def on_packet(packet: PacketData, address: Address):
         if packet.type == PacketType.COMMAND:
             if packet.payload.lower() == b"hello":
-                return PacketData(b"world", PacketType.COMMAND, packet.id)
-        return PacketData(b"go away!", PacketType.DENIED, packet.id)
+                return b"world"
+        return b"go away!"
 
 threading.Thread(target=server_thread).start()
 
