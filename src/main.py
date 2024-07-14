@@ -9,8 +9,10 @@ def channel_transformer(greeting):
     print("transforming", greeting)
     return greeting.removeprefix("typo")
 
-@pool.add_event(event.Event(TEST_CHANNEL))
-def first_event(greeting):
+pool.add_event(event.Event(TEST_CHANNEL, print, preargs=("[debug]",)))
+
+@pool.add_event(event.Event(TEST_CHANNEL, preargs=("prearg",)))
+def first_event(prearg, greeting):
     print("first_event", greeting)
     return "hello", "there"
 

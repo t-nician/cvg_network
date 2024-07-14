@@ -1,23 +1,30 @@
 from enum import Enum
+from uuid import uuid4
 from dataclasses import dataclass, field
 
 
 CHANNEL_ALREADY_EXISTS = "Channel '{0}' already exists!"
 CHANNEL_DOESNT_EXIST = "Channel '{0}' doesn't exist!"
 
+DEFAULT_CHANNEL_TRANSFORMER = lambda *_: ( _ )
+DEFAULT_EVENT_FUNC = lambda *_: ( )
 
 @dataclass
 class Event:
     channel_name: any = field(default=None)
+
+    func: ( any ) = field(default=DEFAULT_EVENT_FUNC)
+    id: str = field(default_factory=lambda: uuid4().hex)
     
-    func: ( ) = field(default=lambda _: ())
+    preargs: tuple[any] = field(default_factory=tuple)
 
 
 @dataclass
 class Channel:
     name: any = field(default=None)
+    
     compile_returns: bool = field(default=False)
-    transformer_func: ( ) = field(default=lambda *_, **__: ( _, __ ))
+    transformer_func: ( any ) = field(default=DEFAULT_CHANNEL_TRANSFORMER)
     
     listeners: list[Event] = field(default_factory=list)
 
@@ -34,39 +41,41 @@ class Pool:
         self.channels[channel.name] = channel
         
         def wrapper(func):
-            channel.transformer_func = func or (lambda *_, **__: ( _, __ ))
+            channel.transformer_func = func or DEFAULT_CHANNEL_TRANSFORMER
                 
         return wrapper
     
     def add_event(self, event: Event):
+        channel = self.channels.get(event.channel_name)
+            
+        assert channel, CHANNEL_DOESNT_EXIST.format(
+            str(event.channel_name)
+        )
+        
+        channel.listeners.append(event)
+        
         def wrapper(func):
-            channel = self.channels.get(event.channel_name)
-            
-            assert channel, CHANNEL_DOESNT_EXIST.format(
-                str(event.channel_name)
-            )
-            
             event.func = func
-            channel.listeners.append(event)
         
         return wrapper
     
-    def emit(self, channel_name: any, *args, **kwargs):
+    def emit(self, channel_name: any, *args):
         channel = self.channels.get(channel_name)
-        args = channel.transformer_func(*args, **kwargs)
-        
-        if type(args) is not tuple:
-            args = (args,)
         
         assert channel, CHANNEL_DOESNT_EXIST.format(
             str(channel_name)
         )
         
+        args = channel.transformer_func(*args)
+        
+        if type(args) is not tuple:
+            args = (args,)
+        
         compiled_return = []
         singular_return = None
         
         for listener in channel.listeners:
-            result = listener.func(*args, **kwargs)
+            result = listener.func(*listener.preargs, *args)
             
             if channel.compile_returns and result is not None:
                 compiled_return.append(result)
