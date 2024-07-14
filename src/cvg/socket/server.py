@@ -11,7 +11,7 @@ class ServerSocket:
     host: str = field(default="127.0.0.1")
     port: int = field(default=5000)
     
-    key: bytes = field(default=b"")
+    key: bytes = field(default=b"d")
     
     max_connections: int = field(default=5)
     
@@ -24,8 +24,29 @@ class ServerSocket:
         self.__socket.bind((self.host, self.port))
         self.__socket.listen(self.max_connections)
     
-    def __entrance(self, connection: socket, address: Address):
-        pass
+    def __entrance(self, packet: PacketData, connection: socket, address: Address):
+        if self.key != b"":
+            connection.send(
+                PacketData(b"", PacketType.LOGIN, packet.id).encode()
+            )
+            
+            key_packet = PacketData(connection.recv(4096))
+            
+            if key_packet.type is PacketType.LOGIN:
+                if key_packet.payload == self.key:
+                    connection.send(
+                        PacketData(b"", PacketType.ACCEPTED, packet.id).encode()
+                    )
+                else:
+                    connection.send(
+                        PacketData(b"", PacketType.DENIED, packet.id).encode()
+                    )
+                    return None
+        else:
+            connection.send(
+                PacketData(b"", PacketType.ACCEPTED, packet.id).encode()
+            )
+        
     
     def __connection(self, connection: socket, address: Address):
         while True:
@@ -37,8 +58,13 @@ class ServerSocket:
                 break
             
             print("packet received.")
-            connection.send(self.__on_packet(packet, address).encode())
-            print("response sent to client.")
+            if packet.type is PacketType.ENTRANCE:
+                self.__entrance(packet, connection, address)
+            elif packet.type is PacketType.LOGIN:
+                self.__login(packet, connection, address)
+            else:
+                connection.send(self.__on_packet(packet, address).encode())
+                print("response sent to client.")
     
     def __loop(self):
         while True:

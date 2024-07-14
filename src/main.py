@@ -13,7 +13,7 @@ def server_thread():
 
     @server.start()
     def on_packet(packet: PacketData, address: Address):
-        return PacketData(b"go away!", PacketType.DENIED)
+        return PacketData(b"go away!", PacketType.DENIED, packet.id)
 
 threading.Thread(target=server_thread).start()
 

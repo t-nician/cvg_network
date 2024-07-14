@@ -44,9 +44,9 @@ class PacketData:
             
         raw_len = len(self.payload)
         
-        assert raw_len == 0 or raw_len >= 2, P_INIT_PAYLOAD_LEN
-        
-        if self.type is PacketType.ERROR and raw_len > 0:
+        if self.type is PacketType.ERROR:
+            assert raw_len == 0 or raw_len >= 2, P_INIT_PAYLOAD_LEN
+            
             self.id = self.payload[0:1]
             
             try:
