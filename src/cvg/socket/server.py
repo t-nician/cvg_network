@@ -6,8 +6,52 @@ from dataclasses import dataclass, field
 from cvg.socket.event import Event, Channel, Pool
 from cvg.socket.packet import PacketType, Address, PacketData
 
-
-
+@dataclass
+class ServerSocket:
+    max_connections: int = field(default=5)
+    
+    host: str = field(default="127.0.0.1")
+    port: int = field(default="5000")
+    
+    key: bytes = field(default=b"")
+    
+    event_pool: Pool = field(default_factory=Pool)
+    server_socket: socket | None = field(default=None)
+    
+    def __post_init__(self):
+        self.event_pool.add_channel(Channel(PacketType.ACCESS))
+        
+        self.event_pool.add_channel(Channel(PacketType.COMMAND))
+        self.event_pool.add_channel(Channel(PacketType.STREAM))
+        
+        self.event_pool.add_event(Event(PacketType.ACCESS, self.__on_access))
+        self.event_pool.add_event(Event(PacketType.COMMAND, self.__on_command))
+        
+    def __on_access(self):
+        print("access", self.key)
+    
+    def __on_command(self):
+        pass
+    
+    def __connection(self, connection: socket, address: Address):
+        while True:
+            packet = PacketData(connection.recv(4096))
+            
+            if packet.payload == b"" and packet.type is PacketType.ERROR:
+                break
+            
+            
+    
+    def start(self):
+        self.server_socket = socket(AF_INET, SOCK_STREAM)
+        self.server_socket.bind((self.host, self.port))
+        self.server_socket.listen(self.max_connections)
+        
+        while True:
+            connection, ip_port_tuple = self.server_socket.accept()
+            self.__connection(connection, Address(ip_port_tuple))
+            
+            
 """
 @dataclass
 class ServerSocket:
