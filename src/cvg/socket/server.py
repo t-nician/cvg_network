@@ -11,7 +11,7 @@ class ServerSocket:
     max_connections: int = field(default=5)
     
     host: str = field(default="127.0.0.1")
-    port: int = field(default="5000")
+    port: int = field(default=5000)
     
     key: bytes = field(default=b"")
     
@@ -30,12 +30,14 @@ class ServerSocket:
     
     def __deny(self, packet: PacketData, connection: socket, address: Address):
         connection.send(PacketData(b"", PacketType.DENIED, packet.id).encode())
+        return b""
         
     def __on_access(self, packet: PacketData, connection: socket, address: Address):
         print("access", self.key)
+        return b""
     
     def __on_command(self, packet: PacketData, connection: socket, address: Address):
-        pass
+        return b""
     
     def __connection(self, connection: socket, address: Address):
         while True:
