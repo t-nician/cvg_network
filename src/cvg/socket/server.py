@@ -19,6 +19,7 @@ class ServerSocket:
     server_socket: socket | None = field(default=None)
     
     def __post_init__(self):
+        self.event_pool.add_channel(Channel(PacketType.ERROR))
         self.event_pool.add_channel(Channel(PacketType.ACCESS))
         
         self.event_pool.add_channel(Channel(PacketType.COMMAND))
@@ -26,24 +27,38 @@ class ServerSocket:
         
         self.event_pool.add_event(Event(PacketType.ACCESS, self.__on_access))
         self.event_pool.add_event(Event(PacketType.COMMAND, self.__on_command))
+    
+    def __deny(self, packet: PacketData, connection: socket, address: Address):
+        connection.send(PacketData(b"", PacketType.DENIED, packet.id).encode())
         
-    def __on_access(self):
+    def __on_access(self, packet: PacketData, connection: socket, address: Address):
         print("access", self.key)
     
-    def __on_command(self):
+    def __on_command(self, packet: PacketData, connection: socket, address: Address):
         pass
     
     def __connection(self, connection: socket, address: Address):
         while True:
             packet = PacketData(connection.recv(4096))
+            channel = self.event_pool.get_channel(packet.type)
             
-            if packet.payload == b"" and packet.type is PacketType.ERROR:
-                break
-            
-            
+            if channel is not None:
+                result = self.event_pool.emit(
+                    packet.type, 
+                    packet, 
+                    connection, 
+                    address
+                )
+                
+                connection.send(
+                    channel.compile_returns and b''.join(result) or result
+                )
+            else:
+                self.__deny(packet, connection, address)
     
     def start(self):
         self.server_socket = socket(AF_INET, SOCK_STREAM)
+        
         self.server_socket.bind((self.host, self.port))
         self.server_socket.listen(self.max_connections)
         

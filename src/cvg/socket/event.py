@@ -35,6 +35,9 @@ class Pool:
     channels: dict[any, Channel] = field(default_factory=dict)
     transformer_emit: ( any ) = field(default=DEFAULT_CHANNEL_TRANSFORMER)
     
+    def get_channel(self, channel_name: any) -> Channel | None:
+        return self.channels.get(channel_name)
+    
     def add_channel(self, channel: Channel):
         assert self.channels.get(channel.name) is None, CHANNEL_ALREADY_EXISTS.format(
             str(channel.name)
