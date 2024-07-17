@@ -1,14 +1,33 @@
-# Now we start implementing event.py into the socket implementation >:D
+# I was overthinking it. I have a simpler idea for implementation.
 
-from cvg.socket import server
+import time
+import threading
 
-test_server = server.ServerSocket(key=b"hi")
+from socket import socket, AF_INET, SOCK_STREAM
 
-test_server.event_pool.emit(
-    server.PacketType.ACCESS,
-    server.PacketData(b"", server.PacketType.ACCESS),
-    server.socket(server.AF_INET, server.SOCK_STREAM),
-    server.Address(("127.0.0.1", 5000))
+from cvg.server import Server
+from cvg.object import PacketType, Packet, Address, Connection
+
+from cvg.protocol import server_entrance, client_entrance
+
+def client():
+    time.sleep(2)
+    client = socket(AF_INET, SOCK_STREAM)
+    client.connect(("127.0.0.1", 1234))
+    
+    print(
+        "client", 
+        client_entrance(Connection(client, Address("127.0.0.1", 1234)))
+    )
+
+server = socket(AF_INET, SOCK_STREAM)
+server.bind(("127.0.0.1", 1234))
+server.listen(5)
+
+threading.Thread(target=client).start()
+
+connection, address = server.accept()
+print(
+    "server", 
+    server_entrance(Connection(connection, Address("127.0.0.1", 1234)))
 )
-
-test_server.start()
