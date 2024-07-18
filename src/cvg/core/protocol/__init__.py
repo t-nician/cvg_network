@@ -1,1 +1,1 @@
-from cvg.core.protocol import object, server_to_client, client_to_server, shared
+from cvg.core.protocol import object, shared, client, server

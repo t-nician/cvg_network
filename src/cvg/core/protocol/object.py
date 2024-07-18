@@ -98,9 +98,40 @@ class Packet:
         return self.to_bytes()
 
 
+class ConnectionState(Enum):
+    GREETING = "greeting"
+    WAITING = "waiting"
+    
+    COMMANDING = "commanding"
+    STREAMING = "streaming"
+
+
 @dataclass
 class Connection:
     socket: _socket | None = field(default=None)
     address: Address | None = field(default=None)
     
-    connected: bool = field(default=False)
+    received_packets: list[Packet] = field(default_factory=list)
+    transmitted_packets: list[Packet] = field(default_factory=list)
+    
+    __connection_state: ConnectionState = field(
+        default=ConnectionState.GREETING
+    )
+    
+    def state(self, target: ConnectionState):
+        current_state = self.__connection_state
+        
+        match target:
+            case ConnectionState.WAITING:
+                commanding, streaming, greeting = (
+                    current_state is ConnectionState.COMMANDING,
+                    current_state is ConnectionState.STREAMING,
+                    current_state is ConnectionState.GREETING
+                )
+                assert commanding or streaming or greeting, ""
+            case ConnectionState.COMMANDING:
+                assert current_state is ConnectionState.WAITING, ""
+            case ConnectionState.STREAMING:
+                assert current_state is ConnectionState.WAITING, ""
+        
+        self.connection_state = target

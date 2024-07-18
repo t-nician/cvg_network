@@ -1,14 +1,15 @@
-# I need this to be LIGHTER.
-# I want to be able to implement data chunking/streaming asap.
-
 import time
 import socket
 import threading
 
-from cvg.core import protocol
-
-from cvg.core.protocol.object import PacketType, Packet, Connection, Address
+from cvg.core.protocol.object import PacketType, ConnectionState, Packet, Connection, Address
 from cvg.core.protocol.shared import send_and_receive, stream_receive, stream_transmit
+
+from cvg.core.protocol.server import ServerState, ProtocolServer
+
+#server = ProtocolServer("127.0.0.1", 5000, b"")
+
+#server.start()
 
 
 def client():
@@ -18,13 +19,14 @@ def client():
     client.connect(("127.0.0.1", 5000))
 
     client_connection = Connection(client, Address("127.0.0.1", 5000))
+    client_connection.state(ConnectionState.WAITING)
     
     print(
         send_and_receive(
             client_connection,
-            Packet(b"5", PacketType.COMMAND_RUN)
+            Packet(b"0"*5000, PacketType.COMMAND_RUN)
         )
-    )    
+    )
     
 
 def server():
@@ -36,6 +38,8 @@ def server():
     socket_connection, address = server.accept()
     
     client_connection = Connection(socket_connection, Address(address))
+    client_connection.state(ConnectionState.WAITING)
+    
     packet = Packet(socket_connection.recv(4096))
 
     if packet.type is PacketType.STREAM_START:

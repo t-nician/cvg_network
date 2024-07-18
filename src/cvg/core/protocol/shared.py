@@ -1,4 +1,4 @@
-from cvg.core.protocol.object import PacketType, Packet, Connection
+from cvg.core.protocol.object import PacketType, ConnectionState, Packet, Connection
 
 
 class StreamInvalidPacketReceivedDuringStream(Exception):
@@ -75,6 +75,9 @@ def stream_receive(connection: Connection, packet: Packet) -> Packet:
     stream_size = int.from_bytes(packet.payload, "big")
     stream_result = b""
     
+    __original_state = connection.state
+    connection.state = ConnectionState.STREAMING
+    
     while True:
         chunk_packet = __send_and_receive(
             connection,
@@ -101,6 +104,8 @@ def stream_receive(connection: Connection, packet: Packet) -> Packet:
     
 
 def send_and_receive(connection: Connection, packet: Packet) -> Packet:
+    connection.state(ConnectionState.STREAMING)
+    
     raw_packet = packet.encode()
     
     if len(raw_packet) > 4096:
@@ -110,8 +115,12 @@ def send_and_receive(connection: Connection, packet: Packet) -> Packet:
     
     match response.type:
         case PacketType.STREAM_START:
-            return stream_receive(connection, response)
+            response = stream_receive(connection, response)
         case _:
-            return response
+            pass
+        
+    connection.state(ConnectionState.WAITING)
+    
+    return response
 
 
