@@ -109,7 +109,10 @@ class ConnectionState(Enum):
 
 @dataclass
 class Connection:
-    socket: _socket | None = field(default=None)
+    socket: tuple[_socket, tuple[int, str]] | _socket | None = field(
+        default=None
+    )
+    
     address: Address | None = field(default=None)
     
     received_packets: list[Packet] = field(default_factory=list)
@@ -118,6 +121,11 @@ class Connection:
     __connection_state: ConnectionState = field(
         default=ConnectionState.GREETING
     )
+    
+    def __post_init__(self):
+        if type(self.socket) is tuple:
+            self.address = Address(self.socket[1])
+            self.socket = self.socket[0]
     
     def state(self, target: ConnectionState):
         current_state = self.__connection_state
@@ -131,8 +139,17 @@ class Connection:
                 )
                 assert commanding or streaming or greeting, ""
             case ConnectionState.COMMANDING:
-                assert current_state is ConnectionState.WAITING, ""
+                waiting, greeting = (
+                    current_state is ConnectionState.WAITING,
+                    current_state is ConnectionState.GREETING
+                )
+                assert waiting or greeting, ""
             case ConnectionState.STREAMING:
-                assert current_state is ConnectionState.WAITING, ""
+                waiting, greeting = (
+                    current_state is ConnectionState.WAITING,
+                    current_state is ConnectionState.GREETING
+                )
+                
+                assert waiting or greeting, ""
         
         self.connection_state = target

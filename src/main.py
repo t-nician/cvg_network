@@ -5,30 +5,33 @@ import threading
 from cvg.core.protocol.object import PacketType, ConnectionState, Packet, Connection, Address
 from cvg.core.protocol.shared import send_and_receive, stream_receive, stream_transmit
 
-from cvg.core.protocol.server import ServerState, ProtocolServer
+from cvg.core.protocol.client import establish_connection
+
+from cvg.core.network.server import ServerState, ProtocolServer
 
 #server = ProtocolServer("127.0.0.1", 5000, b"")
 
 #server.start()
 
+server = ProtocolServer(key=b"b")
 
 def client():
     time.sleep(2)
     
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect(("127.0.0.1", 5000))
-
-    client_connection = Connection(client, Address("127.0.0.1", 5000))
-    client_connection.state(ConnectionState.WAITING)
-    
-    print(
-        send_and_receive(
-            client_connection,
-            Packet(b"0"*5000, PacketType.COMMAND_RUN)
-        )
+    connection = Connection(
+        socket.socket(socket.AF_INET, socket.SOCK_STREAM),
+        Address("127.0.0.1", 5000)
     )
+
+    connection.socket.connect(("127.0.0.1", 5000))
+    
+    print("[client]", establish_connection(connection, key=b"b"))
     
 
+threading.Thread(target=server.start).start()
+client()
+
+"""
 def server():
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     
@@ -56,6 +59,4 @@ def server():
             Packet(b"world", PacketType.COMMAND_RESULT).encode()
         )
 
-
-threading.Thread(target=server).start()
-client()
+"""

@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 
 from socket import socket, AF_INET, SOCK_STREAM
 
-from cvg.core.protocol.server import acknowledge_client
+from cvg.core.protocol.server import establish_connection
 
 from cvg.core.protocol.object import PacketType, Packet, Connection, Address
 from cvg.core.protocol.shared import send_and_receive, stream_receive, stream_transmit
@@ -55,7 +55,7 @@ class ProtocolServer:
         
         self.__server_socket = socket(AF_INET, SOCK_STREAM)
         self.__server_socket.bind((self.host, self.port))
-        self.__server_socket.listen(5)
+        self.__server_socket.listen(5) # TODO change to configurable value here
     
     def start(self):
         if self.__server_state is not ServerState.BINDING:
@@ -64,11 +64,6 @@ class ProtocolServer:
         self.state(ServerState.LISTENING)
         
         while True:
-            connection, address = self.__server_socket.accept()
-            
-            if acknowledge_client(
-                Connection(connection, Address(address)),
-                self.key
-            ):
-                pass
+            connection = Connection(self.__server_socket.accept())
+            print("[server]", establish_connection(connection, self.key))
             #self.establish(Connection(connection, Address(address)))
