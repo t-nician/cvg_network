@@ -24,6 +24,7 @@ class PacketType(Enum):
     
     CRYPTO_INFO = b"\xb0"
     CRYPTO_DATA = b"\xb1"
+    CRYPTO_CHECK = b"\xb2"
     
     REQUEST_GRANTED = b"\xb0"
     REQUEST_DENIED = b"\xb1"

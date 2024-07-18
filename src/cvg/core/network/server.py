@@ -71,6 +71,10 @@ class ProtocolServer:
         self.state(ServerState.LISTENING)
         
         while True:
-            connection = Connection(self.__server_socket.accept())
+            connection = Connection(
+                self.__server_socket.accept(), 
+                server_crypto=self.__crypto
+            )
+            
             print("[server]", establish_connection(connection, self.key))
             #self.establish(Connection(connection, Address(address)))

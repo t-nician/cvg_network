@@ -1,8 +1,10 @@
 
 
 from cvg.core.protocol.object import PacketType, ConnectionState, Packet, Connection, Address
-from cvg.core.protocol.shared import send_and_receive, stream_receive, stream_transmit
+from cvg.core.protocol.shared import send_and_receive
 
+from cvg.core.protocol.crypto import crypto_client_establish
+from cvg.core.crypto import ECDHCrypto
 
 def login(
     connection: Connection, 
@@ -29,16 +31,24 @@ def establish_connection(
     key: bytes = b"",
     id: bytes = b"\x00"
 ) -> bool:
-    password_or_accepted: Packet = send_and_receive(
+    response_packet: Packet = send_and_receive(
         connection,
         Packet(b"", PacketType.ENTRANCE_GREET, id)
     )
     
-    if password_or_accepted.type is PacketType.ENTRANCE_PASSWORD:
+    if response_packet.type is PacketType.CRYPTO_INFO:
+        crypto_client_establish(connection, response_packet.payload, id)
+        
+        response_packet = send_and_receive(
+            connection,
+            Packet(b"", PacketType.ENTRANCE_GREET, id)
+        )
+        
+    if response_packet.type is PacketType.ENTRANCE_PASSWORD:
         return login(connection, key, id)
-    elif password_or_accepted.type is PacketType.REQUEST_GRANTED:
+    elif response_packet.type is PacketType.REQUEST_GRANTED:
         return True
-    elif password_or_accepted.type is PacketType.REQUEST_DENIED:
+    elif response_packet.type is PacketType.REQUEST_DENIED:
         return False
     else:
-        raise Exception(connection, password_or_accepted)
+        raise Exception(connection, response_packet)
