@@ -1,15 +1,15 @@
 from cvg.core.protocol.object import PacketType, ConnectionState, Packet, Connection
 
 
-class ReceivedInvalidOrMissingPacket(Exception):
-    pass
-
-
 class StreamInvalidPacketReceivedDuringStream(Exception):
     pass
 
 
 class StreamIncompletePacketReceived(Exception):
+    pass
+
+
+class ReceivedInvalidOrMissingPacket(Exception):
     pass
 
 
