@@ -5,7 +5,9 @@ from socket import socket, AF_INET, SOCK_STREAM
 
 from cvg.core.protocol.object import PacketType, ConnectionState, Packet, Connection, Address
 from cvg.core.protocol.shared import send_and_receive, stream_receive, stream_transmit
-    
+from cvg.core.protocol.crypto import transmit_crypto, receive_crypto
+
+from cvg.core.protocol.crypto import ECParams, ECDHCrypto
 
 def __exchange_crypto(connection: Connection):
     pass
@@ -43,9 +45,12 @@ def login(
 
 def establish_connection(
     connection: Connection,
-    key: bytes = b""
+    key: bytes = b"",
 ) -> bool:
     greeting_packet = Packet(connection.socket.recv(4096))
+    
+    if connection.server_crypto:
+        transmit_crypto(connection)
     
     if key != b"":
         return login(connection, key, greeting_packet.id)

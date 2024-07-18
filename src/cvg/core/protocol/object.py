@@ -3,6 +3,7 @@ from socket import socket as _socket
 
 from dataclasses import dataclass, field
 
+from cvg.core.crypto import ECDHCrypto
 
 class InvalidPayloadLength(Exception):
     pass
@@ -118,6 +119,11 @@ class Connection:
     
     address: Address | None = field(default=None)
     
+    client_crypto: ECDHCrypto | None = field(default=None)
+    server_crypto: ECDHCrypto | None = field(default=None)
+    
+    secret_key: bytes = field(default=None)
+        
     received_packets: list[Packet] = field(default_factory=list)
     transmitted_packets: list[Packet] = field(default_factory=list)
     

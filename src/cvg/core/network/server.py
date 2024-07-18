@@ -8,6 +8,7 @@ from cvg.core.protocol.server import establish_connection
 from cvg.core.protocol.object import PacketType, Packet, Connection, Address
 from cvg.core.protocol.shared import send_and_receive, stream_receive, stream_transmit
 
+from cvg.core.protocol.crypto import ECParams, ECDHCrypto
 
 class ServerState(Enum):
     CREATED = "created"
@@ -24,6 +25,7 @@ class ProtocolServer:
     
     encrypted: bool = field(default=False)
     
+    __crypto: ECDHCrypto = field(default_factory=ECDHCrypto)
     __server_socket: socket | None = field(default=None)
     __server_state: ServerState = field(default=ServerState.CREATED)
 
