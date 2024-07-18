@@ -131,7 +131,7 @@ class Connection:
             self.socket = self.socket[0]
     
     def state(self, target: ConnectionState):
-        current_state = self.__connection_state
+        current_state = self.get_state()
         
         match target:
             case ConnectionState.WAITING:
@@ -140,15 +140,18 @@ class Connection:
                     current_state is ConnectionState.STREAMING,
                     current_state is ConnectionState.GREETING
                 )
-                assert commanding or streaming or greeting, ""
+                assert commanding or streaming or greeting, "" # TODO add msg
             case ConnectionState.COMMANDING:
-                assert current_state is ConnectionState.WAITING, ""
+                assert current_state is ConnectionState.WAITING, "" # TODO msg
             case ConnectionState.STREAMING:
                 waiting, greeting = (
                     current_state is ConnectionState.WAITING,
                     current_state is ConnectionState.GREETING
                 )
                 
-                assert waiting or greeting, ""
+                assert waiting or greeting, "" # TODO add msg
         
         self.connection_state = target
+
+    def get_state(self) -> ConnectionState:
+        return self.__connection_state

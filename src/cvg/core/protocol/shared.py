@@ -152,7 +152,7 @@ def send_and_receive(connection: Connection, packet: Packet) -> Packet:
     
     match response.type:
         case PacketType.STREAM_START:
-            response = stream_receive(connection, response)
+            return stream_receive(connection, response)
         case _:
             pass
     

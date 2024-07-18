@@ -42,13 +42,18 @@ class ProtocolServer:
             pass # TODO load encryption params.
     
     def state(self, target: ServerState):
+        current_state = self.get_state()
+        
         match target:
             case ServerState.BINDING:
-                assert self.__server_state is ServerState.CREATED
+                assert current_state is ServerState.CREATED # TODO msg
             case ServerState.LISTENING:
-                assert self.__server_state is ServerState.BINDING
+                assert current_state is ServerState.BINDING # TODO msg
         
         self.__server_state = target
+    
+    def get_state(self) -> ServerState:
+        return self.__server_state
     
     def bind(self):
         self.state(ServerState.BINDING)
@@ -58,7 +63,7 @@ class ProtocolServer:
         self.__server_socket.listen(5) # TODO change to configurable value here
     
     def start(self):
-        if self.__server_state is not ServerState.BINDING:
+        if self.get_state() is not ServerState.BINDING:
             self.bind()
         
         self.state(ServerState.LISTENING)
