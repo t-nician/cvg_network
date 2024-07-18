@@ -10,6 +10,7 @@ from cvg.core import protocol
 from cvg.core.protocol.object import PacketType, Packet, Connection, Address
 from cvg.core.protocol.shared import send_and_receive, stream_receive, stream_transmit
 
+
 def client():
     time.sleep(2)
     
@@ -21,7 +22,7 @@ def client():
     print(
         send_and_receive(
             client_connection,
-            Packet(b"a"*10000, PacketType.COMMAND_RUN)
+            Packet(b"5", PacketType.COMMAND_RUN)
         )
     )    
     

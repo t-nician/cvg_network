@@ -14,7 +14,9 @@ class InvalidPacketType(Exception):
 
 class PacketType(Enum):
     UNKNOWN = b"\xf0"
-    ERROR = b"\xf1"
+    
+    OK = b"\xf1"
+    BAD = b"\xf2"
     
     ENTRANCE_GREET = b"\x00"
     ENTRANCE_CRYPTO = b"\x01"
