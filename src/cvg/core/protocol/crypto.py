@@ -13,6 +13,56 @@ from cvg.core.protocol.object import PacketType, ConnectionState, Packet, Connec
 
 from cvg.core.crypto import ECParams, ECDHCrypto
 
+
+class ReceivedInvalidOrMissingPacket(Exception):
+    pass
+
+
+def decrypt_packet(packet: Packet, key: bytes) -> Packet:
+    cipher = AES.new(
+        key=key,
+        nonce=packet.payload[0:16],
+        mode=AES.MODE_EAX
+    )
+        
+    return Packet(cipher.decrypt(packet.payload[16::]))
+
+
+def encrypt_packet(packet: Packet, key: bytes) -> Packet:
+    cipher = AES.new(
+        key=key,
+        mode=AES.MODE_EAX
+    )
+    
+    return Packet(
+        cipher.nonce + cipher.encrypt(packet.to_bytes()),
+        PacketType.CRYPTO_DATA,
+        packet.id
+    )
+
+
+def crypto_send_and_receive(connection: Connection, packet: Packet):
+    print(connection.secret_key)
+    print(packet)
+    
+    cipher = AES.new(
+        key=connection.secret_key,
+        mode=AES.MODE_EAX,
+    )
+    
+    response_packet = send_and_receive(
+        connection,
+        Packet(
+            cipher.nonce + cipher.encrypt(packet.to_bytes()),
+            PacketType.CRYPTO_DATA,
+            packet.id
+        )
+    )
+    
+    if response_packet.type is PacketType.CRYPTO_DATA:
+        return decrypt_packet(response_packet, connection.secret_key)
+
+
 def crypto_client_establish(
     connection: Connection, pem: bytes, id: bytes = "\x00"
 ):
@@ -40,15 +90,16 @@ def crypto_client_establish(
         backend=default_backend()
     ).derive(secret)
       
-    if crypto_check.type is PacketType.CRYPTO_CHECK:
-        cipher = AES.new(
-            encryption_key, 
-            nonce=crypto_check.payload[0:16],
-            mode=AES.MODE_EAX
-        )
-        if cipher.decrypt(crypto_check.payload[16::]) == b"hello!":
+    if crypto_check.type is PacketType.CRYPTO_DATA:
+    
+        if decrypt_packet(crypto_check, encryption_key).payload == b"hello!":
+            connection.secret_key = encryption_key
+        
             connection.socket.send(
-                Packet(b"", PacketType.OK, id).to_bytes()
+                encrypt_packet(
+                    Packet(b"", PacketType.OK, id), 
+                    encryption_key
+                ).to_bytes()
             )
 
 
@@ -76,17 +127,18 @@ def crypto_server_establish(connection: Connection, id: bytes = "\x00"):
         backend=default_backend()
     ).derive(secret)
     
-    cipher = AES.new(encryption_key, mode=AES.MODE_EAX)
-    payload = cipher.nonce + cipher.encrypt(b"hello!")
+    connection.secret_key = encryption_key
     
-    crypto_check_status = send_and_receive(
+    crypto_check_status = crypto_send_and_receive(
         connection,
         Packet(
-            payload,
+            b"hello!",
             PacketType.CRYPTO_CHECK,
             id
         )
     )
     
-    if crypto_check_status.type is PacketType.OK:
-        return None
+    if crypto_check_status.type is not PacketType.OK:
+        raise Exception("crypto exchange failed!")
+    
+    

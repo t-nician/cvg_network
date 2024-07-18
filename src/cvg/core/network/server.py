@@ -8,7 +8,7 @@ from cvg.core.protocol.server import establish_connection
 from cvg.core.protocol.object import PacketType, Packet, Connection, Address
 from cvg.core.protocol.shared import send_and_receive, stream_receive, stream_transmit
 
-from cvg.core.protocol.crypto import ECParams, ECDHCrypto
+from cvg.core.protocol.crypto import ECParams, ECDHCrypto, encrypt_packet, decrypt_packet
 
 class ServerState(Enum):
     CREATED = "created"
@@ -25,7 +25,7 @@ class ProtocolServer:
     
     encrypted: bool = field(default=False)
     
-    __crypto: ECDHCrypto = field(default_factory=ECDHCrypto)
+    crypto: ECDHCrypto = field(default_factory=ECDHCrypto)
     __server_socket: socket | None = field(default=None)
     __server_state: ServerState = field(default=ServerState.CREATED)
 
@@ -42,6 +42,18 @@ class ProtocolServer:
         
         if self.encrypted:
             pass # TODO load encryption params.
+    
+    def __listener(self, connection: Connection):
+        while True:
+            packet = Packet(connection.socket.recv(4096))
+            
+            if packet.type is PacketType.CRYPTO_DATA:
+                connection.socket.send(
+                    encrypt_packet(Packet(
+                        decrypt_packet(packet, connection.secret_key).payload,
+                        
+                    ), connection.secret_key).to_bytes()
+                )
     
     def state(self, target: ServerState):
         current_state = self.get_state()
@@ -73,8 +85,12 @@ class ProtocolServer:
         while True:
             connection = Connection(
                 self.__server_socket.accept(), 
-                server_crypto=self.__crypto
+                server_crypto=self.crypto
             )
             
-            print("[server]", establish_connection(connection, self.key))
+            result = establish_connection(connection, self.key)
+            
+            print(f"[server] [{connection.address}] established ", result)
+            
+            self.__listener(connection)
             #self.establish(Connection(connection, Address(address)))

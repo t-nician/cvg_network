@@ -6,6 +6,7 @@ from cvg.core.protocol.object import PacketType, ConnectionState, Packet, Connec
 from cvg.core.protocol.shared import send_and_receive, stream_receive, stream_transmit
 
 from cvg.core.protocol.client import establish_connection
+from cvg.core.protocol.crypto import crypto_send_and_receive
 
 from cvg.core.network.server import ServerState, ProtocolServer
 
@@ -28,6 +29,11 @@ def client():
     connection.socket.connect(connection.address.as_tuple())
     
     print("[client]", establish_connection(connection, key=b"b"))
+    
+    print("client received", crypto_send_and_receive(
+        connection,
+        Packet(b"hello there", PacketType.COMMAND_RUN)
+    ))
     
 
 threading.Thread(target=server.start).start()
