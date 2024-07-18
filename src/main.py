@@ -1,6 +1,7 @@
 import time
 import socket
 import threading
+import sys
 
 from cvg.core.protocol.object import PacketType, ConnectionState, Packet, Connection, Address
 from cvg.core.protocol.shared import send_and_receive, stream_receive, stream_transmit
@@ -36,8 +37,16 @@ def client():
     ))
     
 
-threading.Thread(target=server.start).start()
-client()
+#threading.Thread(target=server.start).start()
+
+if len(sys.argv) > 1:
+    print(sys.argv)
+    if sys.argv[1] == "client":
+        client()
+    else:
+        server.start()
+else:
+    server.start()
 
 """
 def server():

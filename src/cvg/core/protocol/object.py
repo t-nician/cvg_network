@@ -80,6 +80,7 @@ class Packet:
     id: bytes = field(default=b"\x00")
 
     def __post_init__(self):
+        print("[packet-init]", self.payload)
         if self.type is PacketType.UNKNOWN:
             if len(self.payload) < 2:
                 raise InvalidPayloadLength(INVALID_PAYLOAD_LENGTH)

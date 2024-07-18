@@ -18,6 +18,7 @@ def __send_and_receive(connection: Connection, packet: Packet) -> Packet:
     connection.socket.send(packet.encode())
     
     try:
+        raw = connection.socket.recv(4096)
         packet = Packet(connection.socket.recv(4096))
         connection.state(ConnectionState.WAITING)
         return packet

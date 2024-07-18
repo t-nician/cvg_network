@@ -25,7 +25,7 @@ def decrypt_packet(packet: Packet, key: bytes) -> Packet:
         mode=AES.MODE_EAX
     )
         
-    return Packet(cipher.decrypt(packet.payload[16::]))
+    return cipher.decrypt(packet.payload[16::])
 
 
 def encrypt_packet(packet: Packet, key: bytes) -> Packet:
@@ -42,21 +42,10 @@ def encrypt_packet(packet: Packet, key: bytes) -> Packet:
 
 
 def crypto_send_and_receive(connection: Connection, packet: Packet):
-    print(connection.secret_key)
-    print(packet)
-    
-    cipher = AES.new(
-        key=connection.secret_key,
-        mode=AES.MODE_EAX,
-    )
-    
+    print("[crypto-s-r]", packet)
     response_packet = send_and_receive(
         connection,
-        Packet(
-            cipher.nonce + cipher.encrypt(packet.to_bytes()),
-            PacketType.CRYPTO_DATA,
-            packet.id
-        )
+        encrypt_packet(packet, connection.secret_key)
     )
     
     if response_packet.type is PacketType.CRYPTO_DATA:

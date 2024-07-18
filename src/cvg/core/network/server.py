@@ -47,13 +47,20 @@ class ProtocolServer:
         while True:
             packet = Packet(connection.socket.recv(4096))
             
+            print("[__listener]", packet)
+            
             if packet.type is PacketType.CRYPTO_DATA:
                 connection.socket.send(
-                    encrypt_packet(Packet(
-                        decrypt_packet(packet, connection.secret_key).payload,
-                        
-                    ), connection.secret_key).to_bytes()
+                    encrypt_packet(
+                        decrypt_packet(
+                            packet, 
+                            connection.secret_key
+                        ), 
+                        connection.secret_key
+                    ).to_bytes()
                 )
+            else:
+                print("[server]", packet)
     
     def state(self, target: ServerState):
         current_state = self.get_state()
