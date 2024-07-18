@@ -3,28 +3,35 @@ from socket import socket as _socket
 from dataclasses import dataclass, field
 
 
-class PacketType(Enum):
-    ERROR = b"\xf0"
-    UNKNOWN = b"\xf1"
-    
-    GREET = b"\x00"
-    PASSWORD = b"\x01"
-    
-    GRANTED = b"\xb0"
-    DENIED = b"\xb1"
-    
-    EVENT = b"\xe0"
-    EXECUTE = b"\xe1"
-    
-    STREAM = b"\xd0"
-    
-
 class InvalidPayloadLength(Exception):
     pass
 
 
 class InvalidPacketType(Exception):
     pass
+
+
+class PacketType(Enum):
+    ERROR = b"\xf0"
+    UNKNOWN = b"\xf1"
+    
+    ENTRANCE_GREET = b"\x00"
+    ENTRANCE_CRYPTO = b"\x01"
+    
+    ENTRANCE_PASSWORD = b"\x02"
+    
+    REQUEST_GRANTED = b"\xb0"
+    REQUEST_DENIED = b"\xb1"
+    
+    EVENT_EMIT = b"\xe0"
+    EVENT_LISTEN = b"\xe1"
+    
+    COMMAND_RUN = b"\xc0"
+    COMMAND_RESULT = b"\xc1"
+    
+    STREAM_BEGIN = b"\xd0"
+    STREAM_DATA = b"\xd1"
+    STREAM_END = b"\xd2"
 
 
 INVALID_PAYLOAD_LENGTH = "Payload must be 2 bytes minimum!"
