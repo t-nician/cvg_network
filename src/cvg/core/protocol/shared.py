@@ -1,5 +1,6 @@
 from cvg.core.protocol.object import PacketType, ConnectionState, Packet, Connection
 
+
 class ReceivedInvalidOrMissingPacket(Exception):
     pass
 
@@ -21,9 +22,10 @@ def __send_and_receive(connection: Connection, packet: Packet) -> Packet:
         connection.state(ConnectionState.WAITING)
         return packet
     except:
-        connection.state(ConnectionState.WAITING)
-    
-    return None
+        raise ReceivedInvalidOrMissingPacket(
+            connection, 
+            packet
+        )
 
 
 def stream_transmit(connection: Connection, packet: Packet) -> Packet:
@@ -35,12 +37,6 @@ def stream_transmit(connection: Connection, packet: Packet) -> Packet:
         connection,
         Packet(len(data).to_bytes(8, "big"), PacketType.STREAM_START)
     )
-
-    if response is None:
-        raise ReceivedInvalidOrMissingPacket(
-            connection, 
-            packet
-        )
 
     if response.type is PacketType.STREAM_DATA:
         length = len(data)
@@ -60,12 +56,6 @@ def stream_transmit(connection: Connection, packet: Packet) -> Packet:
                 Packet(chunk, PacketType.STREAM_DATA, packet.id)
             )
             
-            if response is None:
-                raise ReceivedInvalidOrMissingPacket(
-                    connection, 
-                    packet
-                )
-            
             match response.type:
                 case PacketType.STREAM_DATA:
                     continue
@@ -79,12 +69,6 @@ def stream_transmit(connection: Connection, packet: Packet) -> Packet:
             connection,
             Packet(b"", PacketType.STREAM_END, packet.id)
         )
-        
-        if complete_response is None:
-            raise ReceivedInvalidOrMissingPacket(
-                connection, 
-                packet
-            )
         
         match complete_response.type:
             case PacketType.STREAM_CHECKSUM:
@@ -108,12 +92,6 @@ def stream_receive(connection: Connection, packet: Packet) -> Packet:
             connection,
             Packet(b"", PacketType.STREAM_DATA, packet.id)
         )
-        
-        if chunk_packet is None:
-            raise ReceivedInvalidOrMissingPacket(
-                connection, 
-                packet
-            )
         
         match chunk_packet.type:
             case PacketType.STREAM_DATA:
@@ -143,12 +121,6 @@ def send_and_receive(connection: Connection, packet: Packet) -> Packet:
         return stream_transmit(connection, packet)
     
     response = __send_and_receive(connection, packet)
-    
-    if response is None:
-        raise ReceivedInvalidOrMissingPacket(
-            connection, 
-            packet
-        )
     
     match response.type:
         case PacketType.STREAM_START:
