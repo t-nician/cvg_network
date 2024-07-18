@@ -1,7 +1,3 @@
-import base64
-import hashlib
-
-
 from enum import Enum
 from dataclasses import dataclass, field
 
@@ -14,13 +10,8 @@ from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
-@dataclass
-class ECParams:
-    curve: ec.EllipticCurve = field(default_factory=ec.SECP521R1)
-    backend: ( None ) = field(default_factory=default_backend)
-    
-    def as_tuple(self) -> tuple[ec.EllipticCurve, ( None )]:
-        return (self.curve, self.backend)
+from cvg.core.crypto import ECParams
+
 
 
 # Generate Alice's key pair

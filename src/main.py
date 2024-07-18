@@ -9,7 +9,21 @@ from cvg.core.protocol.client import establish_connection
 
 from cvg.core.network.server import ServerState, ProtocolServer
 
-import cvg.core.crypto.object
+from cvg.core.crypto import ECParams, ECDHCrypto
+
+alice_crypto = ECDHCrypto()
+bob_crypto = ECDHCrypto()
+
+alices_encoded_crypto = alice_crypto.public_key_to_pem()
+bobs_encoded_crypto = bob_crypto.public_key_to_pem()
+
+alices_transmitted_crypto = ECDHCrypto(alices_encoded_crypto)
+bobs_transmitted_crypto = ECDHCrypto(bobs_encoded_crypto)
+
+print("bobs secret", bob_crypto.exchange(alices_transmitted_crypto))
+print("alices secret", alice_crypto.exchange(bobs_transmitted_crypto))
+
+
 
 #server = ProtocolServer("127.0.0.1", 5000, b"")
 
