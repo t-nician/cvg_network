@@ -1,5 +1,6 @@
 from enum import Enum
 from socket import socket as _socket
+
 from dataclasses import dataclass, field
 
 
@@ -12,8 +13,10 @@ class InvalidPacketType(Exception):
 
 
 class PacketType(Enum):
-    ERROR = b"\xf0"
-    UNKNOWN = b"\xf1"
+    UNKNOWN = b"\xf0"
+    
+    ERROR = b"\xf1"
+    CONTINUE = b"\xf2"
     
     ENTRANCE_GREET = b"\x00"
     ENTRANCE_CRYPTO = b"\x01"
@@ -23,15 +26,17 @@ class PacketType(Enum):
     REQUEST_GRANTED = b"\xb0"
     REQUEST_DENIED = b"\xb1"
     
-    EVENT_EMIT = b"\xe0"
+    EVENT_BROADCAST = b"\xe0"
     EVENT_LISTEN = b"\xe1"
     
     COMMAND_RUN = b"\xc0"
     COMMAND_RESULT = b"\xc1"
-    
-    STREAM_BEGIN = b"\xd0"
+
+    STREAM_START = b"\xd0"
     STREAM_DATA = b"\xd1"
     STREAM_END = b"\xd2"
+    
+    STREAM_CHECKSUM = b"\xd3"
 
 
 INVALID_PAYLOAD_LENGTH = "Payload must be 2 bytes minimum!"
@@ -88,6 +93,9 @@ class Packet:
 
     def to_bytes(self) -> bytes:
         return self.id + self.type.value + self.payload
+    
+    def encode(self) -> bytes:
+        return self.to_bytes()
 
 
 @dataclass
