@@ -3,11 +3,10 @@ from dataclasses import dataclass, field
 
 from socket import socket, AF_INET, SOCK_STREAM
 
-from cvg.core.protocol.server import establish_connection
+from cvg.core.protocol.server import acknowledge_client
 
 from cvg.core.protocol.object import PacketType, Packet, Connection, Address
 from cvg.core.protocol.shared import send_and_receive, stream_receive, stream_transmit
-
 
 
 class ServerState(Enum):
@@ -66,4 +65,10 @@ class ProtocolServer:
         
         while True:
             connection, address = self.__server_socket.accept()
+            
+            if acknowledge_client(
+                Connection(connection, Address(address)),
+                self.key
+            ):
+                pass
             #self.establish(Connection(connection, Address(address)))

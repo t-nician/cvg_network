@@ -122,5 +122,3 @@ def send_and_receive(connection: Connection, packet: Packet) -> Packet:
     connection.state(ConnectionState.WAITING)
     
     return response
-
-

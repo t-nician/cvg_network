@@ -19,9 +19,10 @@ class PacketType(Enum):
     BAD = b"\xf2"
     
     ENTRANCE_GREET = b"\x00"
-    ENTRANCE_CRYPTO = b"\x01"
+    ENTRANCE_PASSWORD = b"\x01"
     
-    ENTRANCE_PASSWORD = b"\x02"
+    CRYPTO_INFO = b"\xb0"
+    CRYPTO_DATA = b"\xb1"
     
     REQUEST_GRANTED = b"\xb0"
     REQUEST_DENIED = b"\xb1"
