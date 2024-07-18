@@ -18,25 +18,26 @@ def login(
 ) -> bool:
     password_packet = send_and_receive(
         connection, 
-        Packet(b"", PacketType.ENTRANCE_PASSWORD)
+        Packet(b"", PacketType.ENTRANCE_PASSWORD, id)
     )
     
     if password_packet.type is PacketType.ENTRANCE_PASSWORD:
         if key == password_packet.payload:
             connection.state(ConnectionState.WAITING)
             connection.socket.send(
-                Packet(b"", PacketType.REQUEST_GRANTED).encode()
+                Packet(b"", PacketType.REQUEST_GRANTED, id).encode()
             )
             
             return True
         
         connection.state(ConnectionState.GREETING)
         connection.socket.send(
-            Packet(b"", PacketType.REQUEST_DENIED).encode()
+            Packet(b"", PacketType.REQUEST_DENIED, id).encode()
         )
         
         return False
     else:
+        connection.state(ConnectionState.GREETING)
         raise Exception(connection, password_packet)
 
 

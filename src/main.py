@@ -9,6 +9,8 @@ from cvg.core.protocol.client import establish_connection
 
 from cvg.core.network.server import ServerState, ProtocolServer
 
+import cvg.core.crypto.object
+
 #server = ProtocolServer("127.0.0.1", 5000, b"")
 
 #server.start()
@@ -23,7 +25,7 @@ def client():
         Address("127.0.0.1", 5000)
     )
 
-    connection.socket.connect(("127.0.0.1", 5000))
+    connection.socket.connect(connection.address.as_tuple())
     
     print("[client]", establish_connection(connection, key=b"b"))
     

@@ -65,6 +65,9 @@ class Address:
     
     def __hash__(self) -> int:
         return hash((self.host, self.port))
+    
+    def as_tuple(self) -> tuple[str, int]:
+        return (self.host, self.port)
 
 
 @dataclass
@@ -139,11 +142,7 @@ class Connection:
                 )
                 assert commanding or streaming or greeting, ""
             case ConnectionState.COMMANDING:
-                waiting, greeting = (
-                    current_state is ConnectionState.WAITING,
-                    current_state is ConnectionState.GREETING
-                )
-                assert waiting or greeting, ""
+                assert current_state is ConnectionState.WAITING, ""
             case ConnectionState.STREAMING:
                 waiting, greeting = (
                     current_state is ConnectionState.WAITING,
